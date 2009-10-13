@@ -1,0 +1,4 @@
+RewriteEngine on
+RewriteRule ^(\d+)/?$			/?page=$1		[L]
+RewriteRule ^tags/([a-z]+)(/(\d+))?/?$	/?tag=$1&page=$3	[L]
+RewriteRule ^([a-z]+)/?$		/?redir=$1		[L]
