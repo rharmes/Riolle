@@ -9,10 +9,10 @@ Setup
 1. 	Put both the `index.php` and the `.htaccess` files on the root level of your server
 2. 	Customize these lines at the top of `index.php`:
 
-	`$curl_path = '/usr/bin/curl';			# Location of curl on your server.`
-	`$per_page = 20;				# Number of links to show per page.`
-	`$codeset = 'abcdefghijklmnopqrstuvwxyz';	# Characters used to make up the short URL key.`
-	`$domain = 'harm.es';`
+		$curl_path = '/usr/bin/curl';			# Location of curl on your server.
+		$per_page = 20;				# Number of links to show per page.
+		$codeset = 'abcdefghijklmnopqrstuvwxyz';	# Characters used to make up the short URL key.
+		$domain = 'harm.es';
 
 3. 	View the page in a browser. The first time the page is loaded, you may see a PHP error. This should go away the next time the page is loaded.
 
@@ -33,7 +33,7 @@ At the moment, Riolle is known to work in Safari 4 and Firefox 3.5 on the Mac. A
 BSD License
 -----------
 
-http://creativecommons.org/licenses/BSD/
+[http://creativecommons.org/licenses/BSD/](http://creativecommons.org/licenses/BSD/)
 
 Copyright (c) 2009, Ross Harmes
 All rights reserved.
