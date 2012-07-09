@@ -12,12 +12,12 @@
 
 	#
 	# Administrator access, needed to save, edit and delete links.
-	# You're on your own here; my solution so embarrassing that I'm not even going to include it. 
+	# You're on your own here; my solution so embarrassing that I'm not even going to include it.
 	# Set this to true while you're playing around with it.
 	#
 
 	$is_admin = false;
-	
+
 
 	$links = array();
 
@@ -32,34 +32,34 @@
 			#
 			# Insert the row.
 			#
-			
+
 			$url = sqlite_escape_string($_GET['save']);
 			$title = isset($_GET['title']) ? sqlite_escape_string($_GET['title']) : '';
 			$key = '';
 			$now = time();
-			
+
 			$q = $db->query('INSERT INTO links (url, title, created, last_access) VALUES ("' . $url . '", "' . $title . '", ' . $now . ', ' . $now . ')');
 
 			if ($q === false) {
 				create_table($db);
 				$db->query('INSERT INTO links (url, title, created, last_access) VALUES ("' . $url . '", "' . $title . '", ' . $now . ', ' . $now . ')');
-			} 
+			}
 
-			
+
 			#
 			# Create the key.
 			#
-			
+
 			$id = $db->lastInsertRowid();
 			$key = encode_key($id, $codeset);
 
 			$db->query('UPDATE links SET key="' . $key . '" WHERE id=' . $id);
-			
-			
+
+
 			#
 			# Get the title.
 			#
-			
+
 			if ($title === '') {
 
 				$lines = array();
@@ -76,7 +76,7 @@
 					$db->query('UPDATE links SET title="' . $title . '" WHERE id=' . $id);
 				}
 			}
-			
+
 			#
 			# Redirect (or not) depending on the bookmarklet used.
 			#
@@ -113,7 +113,7 @@
 				exit;
 			}
 		}
-		
+
 
 		#
 		# If a new tag is being entered, insert it into the DB.
@@ -124,13 +124,13 @@
 			#
 			# Insert the row.
 			#
-			
+
 			$tags = sqlite_escape_string($_GET['edit_tags']);
 			$id = sqlite_escape_string($_GET['id']);
 
 			$db->query('UPDATE links SET tags="' . $tags . '" WHERE id=' . $id);
 
-			
+
 			#
 			# Reload the page to remove the GET params.
 			#
@@ -138,7 +138,7 @@
 			header('Location: /');
 			exit;
 		}
-		
+
 
 		#
 		# Delete a link.
@@ -149,12 +149,12 @@
 			#
 			# Remove the row.
 			#
-			
+
 			$id = sqlite_escape_string($_GET['delete']);
 
 			$db->query('DELETE FROM links  WHERE id=' . $id);
 
-			
+
 			#
 			# Reload the page to remove the GET params.
 			#
@@ -173,7 +173,7 @@
 			#
 			# Find the row.
 			#
-			
+
 			$key = sqlite_escape_string($_GET['redir']);
 			$q = $db->query('SELECT * FROM links WHERE key="' . $key . '"');
 
@@ -183,12 +183,12 @@
 
 			if ($q === false) {
 				create_table($db);
-				header('Location: /');			
+				header('Location: /');
 				exit;
-			} 
+			}
 
 			$link = $q->fetch(SQLITE_ASSOC);
-			
+
 			#
 			# Update the row, setting the last_access time and incrementing the count.
 			#
@@ -200,7 +200,7 @@
 			# 301 redirect to the URL.
 			#
 
-			header('Location: ' . $link['url'], true, 301);			
+			header('Location: ' . $link['url'], true, 301);
 		}
 
 
@@ -211,7 +211,7 @@
 		$page = (isset($_GET['page']) && $_GET['page'] != '') ? (int) $_GET['page'] : 1;
 		$lower_limit = ($page - 1) * $per_page;
 		$upper_limit = $per_page;
-		
+
 		$where = '';
 		if ($_GET['tag']) {
 			$tag = sqlite_escape_string($_GET['tag']);
@@ -226,16 +226,16 @@
 
 		if ($q === false) {
 			create_table($db);
-		} 
-		
+		}
+
 		#
 		# Read the links in as an associative array.
 		#
-		
+
 		else {
 			$links = $q->fetchAll(SQLITE_ASSOC);
 		}
-	} 
+	}
 	else {
 		die($err);
 	}
@@ -249,15 +249,15 @@
 	}
 
 	function encode_key($n, $codeset) {
-		
+
 		$base = strlen($codeset);
 
 		while ($n > 0) {
 			$key = substr($codeset, ($n % $base), 1) . $key;
 			$n = floor($n / $base);
 		}
-		
-		return $key;		
+
+		return $key;
 	}
 
 	function decode_key($key, $codeset) {
@@ -268,17 +268,17 @@
 		for ($i = strlen($key); $i; $i--) {
   			$n += strpos($codeset, substr($key, (-1 * ($i - strlen($key))), 1)) * pow($base, $i - 1);
 		}
-		
+
 		return $n;
 	}
 
 	function format_tags($tag_string) {
-		
+
 		$html = '';
 		$tags = explode(' ', $tag_string);
-		
+
 		foreach ($tags as $tag) {
-			
+
 			$tag_hash = md5($tag);
 			$offset = 0;
 			$red = hexdec(substr($tag_hash, $offset, 2));
@@ -299,21 +299,21 @@
 				$blue = $blue * 0.95;
 				$brightness = (($red * 299) + ($green * 587) + ($blue * 114)) / 1000;
 			}
-	
+
 			$color = 'rgb(' . (int) $red . ', ' . (int) $green . ', ' . (int) $blue . ')';
 			$hover_color = 'rgb(' . (int) ($red * 1.15) . ', ' . (int) ($green * 1.15) . ', ' . (int) ($blue * 1.15) . ')';
-	
+
 			$html .= '<a href="/tags/' . $tag . '/" style="background: ' . $color . ';" onmouseover="this.style.background = \'' . $hover_color . '\';" onmouseout="this.style.background = \'' . $color . '\';">' . $tag . '</a>';
 		}
-		
+
 		return $html;
 	}
-	
+
 	function make_more_grey($red, $green, $blue) {
-		
+
 		$max = max($red, $green, $blue);
 		$min = min($red, $green, $blue);
-		
+
 		if ($max === $red) {
 			$red -= 5;
 		}
@@ -348,39 +348,39 @@
 	$bookmark_img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAtCAYAAACnF+sSAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAMVJREFUeNpifMvZ+p8BD7j6/Qk+aQYmBgrBqAGjBowaMGrAqAGjBowaMGrASDMA2Pq6C6Rm4VPDgkfuGSMDQxiQPg/E/4A4gxQXgNp2vsAm3jmIQxiygHg6sQY8BWK/S98fnUP1DdiQmYQMAGn2/cfw/zw7IytQF0YbNBOIZ+AyAOxskJ9ZGZkZhFl4gB7/jyVcUQ2BGfACphnE+ff/P4MQ0ACIK7CCTJh3WKA2BwHxBYQ1/xlgrnj2+z0DM/awBhkiABBgAHfLNK5w5WIOAAAAAElFTkSuQmCC';
 	$link_img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAHCAYAAAA4R3wZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJNJREFUeNpi/P//PwMIvONqUwVSEgwIcBhK2yKJvRD6VnUbxGAEaQRqgkk6IymaA6VTkMT2ggig5sOMbzlbYTY5QxU/gSryhdKbobQM1BCQ5odMDKjAC0o3ALExFDegyYEBusZtSBrPQnEDmhwYsADxbahT96L5Zw6SISh+BIJHLEghqIokwYDkV2SxF1CLGAACDADhLCh7Xw+7VgAAAABJRU5ErkJggg==';
 	$link_hover_img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAHCAYAAAA4R3wZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJRJREFUeNpi/P//PwMIvONq8wJSBgwI0Aalq5DELgh9q9oGYjCCNAI1wSRbkRRZQOkTSGLVIAKouY0JahNME0gxIxQnQTGMbwEzGKjHmoUBFUwFYhMg/o8klgbVOBVZIROaxmwoDVI4C4oZ0eTAAGTjNmigVKP5B+bH/+h+BIKjLEgh6IUkAQIn0RSDQxVqEQNAgAEAgOIlVe77gs0AAAAASUVORK5CYII=';
-?>	
+?>
 	<style type="text/css">
-		body, div, form, 
+		body, div, form,
 		input, p, th, td		{ margin: 0; padding: 0; }
 		table 				{ border-collapse: collapse; border-spacing: 0; }
 		em, strong			{ font-style: normal; font-weight: normal; }
 		input 				{ font-family: inherit; font-size: inherit; font-weight: inherit; *font-size:100%; }
-		
+
 		html 				{ background: #444; color: #fff; }
 		body 				{ text-align: center; font-family: Helvetica, Arial, sans; font-size: 11px; line-height: 17px; }
-		
+
 		a 				{ color: #ed0985; text-decoration: none; }
 		a:hover 			{ border-bottom: 1px dotted #777; }
-		
+
 		#doc 				{ width: 1100px; margin: 0 auto; text-align: left; }
 
 		#hd 				{ margin: 40px 0 0; padding: 8px 8px 8px 32px; -webkit-border-radius: 10px; -moz-border-radius: 10px; border-radius: 10px; background: #fff url(<?php echo $bookmark_img; ?>) no-repeat 8px 8px; }
 		#hd.disabled 			{ background-color: #494949; }
 		#save 				{ width: 100%; border: 0; font-size: 38px; }
 		#hd div 			{ width: 100%; height: 44px; }
-		
+
 		table 				{ width: 1134px; margin: 40px 0 0 -20px; }
 		th, td 				{ padding: 4px 6px; vertical-align: top; }
 		th 				{ color: #282828; font-weight: bold; }
 		td em 				{ color: #686868; }
 
-		th.short-link, 
-		tr td.short-link, 
+		th.short-link,
+		tr td.short-link,
 		tr.odd td.short-link 		{ width: 18px; padding: 8px 2px 0 0; background: none; }
 		th.title, td.title 		{ width: 310px; }
 		th.url, td.url 			{ width: 320px; white-space: nowrap; }
-		th.action, 
-		tr td.action, 
+		th.action,
+		tr td.action,
 		tr.odd td.action 		{ width: 8px; padding: 4px 0 4px 6px; background: none; }
 		td.action a 			{ color: #972563; }
 		td.action a:hover 		{ border: 0; color: #ed0985; }
@@ -391,19 +391,19 @@
 		.short-link a 			{ display: block; width: 18px; height: 9px; background: url(<?php echo $link_img; ?>) no-repeat 2px 1px; }
 		.short-link a:hover 		{ border: 0; background: url(<?php echo $link_hover_img; ?>) no-repeat 2px 1px; }
 
-		td.count span 			{ color: #686868; }		
+		td.count span 			{ color: #686868; }
 		span.truncate 			{ display: block; max-width: 300px; float: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-		
+
 		.tags a 			{ display: block; float: left; margin-right: 4px; padding: 0 8px; background: #505050; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; -webkit-box-shadow: 0 0 2px #414141; box-shadow: 0 0 2px #414141; color: #fff; }
 		.tags a:hover 			{ background: #626262; border: none; -webkit-box-shadow: 0 0 2px #303030; box-shadow: 0 0 2px #303030; }
 		.tags a:last-child 		{ margin: 0; }
-		
+
 		.tags a.edit-tags 		{ padding: 0 5px; color: #888; }
 		.tags a.edit-tags:hover 	{ color: #fff; }
-		
+
 		.edit-tags-form 		{ display: none; }
 		.edit-tags-field 		{ width: 410px; float: left; margin-right: 4px; padding: 2px; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; border: 0; }
-		
+
 		#ft 				{ position: relative; overflow: hidden; width: 1100px; min-height: 18px; margin: 30px 0 10px; padding: 10px 0; color: #686868; }
 		#ft p 				{ position: absolute; right: 0; }
 		#ft p.attr 			{ left: 0; }
@@ -416,11 +416,11 @@
 		#ft p.pagination a		{ color: #ed0985; }
 		#ft p.pagination a:hover	{ background: #525252; border: none; -webkit-box-shadow: 0 0 2px #303030; box-shadow: 0 0 2px #303030; }
 		#ft em 				{ color: #fff; }
-		
+
 		.bookmarklet 			{ padding: 1px 5px; background: #494949; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; -webkit-box-shadow: 0 0 2px #414141; box-shadow: 0 0 2px #414141; }
 		.bookmarklet:hover 		{ background: #525252; border: none; -webkit-box-shadow: 0 0 2px #303030; box-shadow: 0 0 2px #303030; }
 	</style>
-</head>	
+</head>
 <body>
 
 <div id="doc">
@@ -472,19 +472,19 @@
 					</td>
 					<td class="action"><?php if ($is_admin) { ?><a href="/?delete=<?php echo $link['id']; ?>" title="Delete link">&times;</a><?php } ?></td>
 				</tr>
-<?php		
+<?php
 		$parity = !$parity;
 	}
-?>				
+?>
 			</tbody>
 		</table>
 	</div>
 	<div id="ft">
 		<p class="attr">
-			This is <em>Riolle</em> / 
+			This is <em>Riolle</em> /
 			<em>Fork on <a href="http://github.com/rharmes/riolle">Github</a></em>
 		</p>
-<?php		
+<?php
 
 	#
 	# Get the pagination information. $page and $per_page are already set above.
@@ -496,20 +496,20 @@
 	$total_links = $result['count'];
 	$total_pages = ceil($total_links / $per_page);
 
-?>		
+?>
 		<p class="pagination">
 <?php if ($page === 1) { ?>
 			<span class="arrow">◄</span>
 <?php } else { ?>
-			<a href="/<?php echo ($page - 1); ?>/" class="arrow">◄</a>	
-<?php } ?> 
-<?php 
+			<a href="/<?php echo ($page - 1); ?>/" class="arrow">◄</a>
+<?php } ?>
+<?php
 	$lower_ellipsis_shown = false;
 	$upper_ellipsis_shown = false;
 	for ($n = 1; $n <= $total_pages; $n++) {
 
 		#
-		# Display the first two, the last two, and a window of 5 around the current page. 
+		# Display the first two, the last two, and a window of 5 around the current page.
 		#
 
 		if ($n <= 2 || $n >= $total_pages - 1 || ($n >= $page - 2 && $n <= $page + 2) || ($page <= 2 && $n <= 5) || ($page >= $total_pages - 1 && $n >= $total_pages - 4)) {
@@ -517,7 +517,7 @@
 				echo "\t\t\t" . '<span class="page">' . $n . '</span>' . "\n";
 			}
 			else {
-				echo "\t\t\t" . '<a href="/' . $n . '/" class="page">' . $n . '</a>' . "\n";			
+				echo "\t\t\t" . '<a href="/' . $n . '/" class="page">' . $n . '</a>' . "\n";
 			}
 		}
 		else if ($n < $page && !$lower_ellipsis_shown) {
@@ -528,23 +528,23 @@
 			$upper_ellipsis_shown = true;
 			echo "\t\t\t" . '<span class="ell">...</span>' . "\n";
 		}
-	} 
+	}
 ?>
 <?php if ($page >= $total_pages) { ?>
 			<span class="arrow">►</span>
 <?php } else { ?>
-			<a href="/<?php echo ($page + 1); ?>/" class="arrow">►</a>	
-<?php } ?> 
+			<a href="/<?php echo ($page + 1); ?>/" class="arrow">►</a>
+<?php } ?>
 		</p>
 <?php if ($is_admin) { ?>
 		<p class="admin">
-			Bookmarklets 
-			<a class="bookmarklet" href="javascript:location.href='http://<?php echo $domain; ?>/?save='+encodeURIComponent(window.location.href)+'&title='+encodeURIComponent(document.title)+'&return=1';">save</a> 
-			<a class="bookmarklet"  href="javascript:location.href='http://<?php echo $domain; ?>/?save='+encodeURIComponent(window.location.href)+'&title='+encodeURIComponent(document.title)+'&show_short_url=1';">shorten</a> 
+			Bookmarklets
+			<a class="bookmarklet" href="javascript:location.href='http://<?php echo $domain; ?>/?save='+encodeURIComponent(window.location.href)+'&title='+encodeURIComponent(document.title)+'&return=1';">save</a>
+			<a class="bookmarklet"  href="javascript:location.href='http://<?php echo $domain; ?>/?save='+encodeURIComponent(window.location.href)+'&title='+encodeURIComponent(document.title)+'&show_short_url=1';">shorten</a>
 			<a class="bookmarklet"  href="javascript:location.href='http://<?php echo $domain; ?>	/?save='+encodeURIComponent(window.location.href)+'&title='+encodeURIComponent(document.title)+'&tweet=1';">tweet</a> /
 			<a href="/?logout=1">Logout</a>
 		</p>
-<?php } ?> 
+<?php } ?>
 	</div>
 </div>
 
@@ -552,17 +552,17 @@
 	function toggleTagForm(id, show) {
 		var tags = document.getElementById('tags-' + id),
 		    tagForm = document.getElementById('edit-tags-' + id);
-		
+
 		tags.style.display = show ? 'none' : '';
 		tagForm.style.display = show ? 'block' : '';
-		
+
 		if (show) {
 			document.getElementById('edit-tags-field-' + id).focus();
 		}
 	}
-<?php if ($show_short_url) { ?>	
+<?php if ($show_short_url) { ?>
 	document.getElementById('save').focus();
-<?php } ?>	
+<?php } ?>
 </script>
 
 </body>
