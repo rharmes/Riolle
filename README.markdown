@@ -23,7 +23,7 @@ At the bottom of the page (when logged in), there are three bookmarklets you can
 
 * Save: saves the URL and returns you to the page you were on
 * Shorten: saves the URL and loads your previously saved URLs, with the short URL for the most recently saved URL displayed at the top of the page
-* Tweet: saves the URL and loads the short URL into a 
+* Tweet: saves the URL and loads the short URL into a
 
 Browser Support
 ---------------
